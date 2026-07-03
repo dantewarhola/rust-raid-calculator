@@ -11,9 +11,10 @@ client-side — no backend, no database. Deployable to Vercel with zero configur
 - **Raid Calculator** — enter how many walls, floors, doorways, windows, and doors (per tier) you
   need to destroy, pick a raid tool per structure, and get the explosive counts plus a raw-material
   shopping list (sulfur, charcoal, metal fragments, low grade fuel, cloth, tech trash, pipes, rope,
-  propane tanks). Every structure defaults to the **cheapest-sulfur mix** of explosives, computed by
-  a small dynamic program in `lib/optimalRaid.ts` — e.g. a garage door is cheaper via explosive ammo
-  than via 2 C4, and walls are cheapest via Propane Explosive Bombs.
+  propane tanks). Every structure defaults to the **optimal mix** computed by `lib/optimalRaid.ts`:
+  minimum sulfur with real damage remainders, preferring compact mixes on near-ties — doors come out
+  as rocket(s) + an explosive-ammo finisher (e.g. 1 rocket + 8 explosive ammo for a sheet metal
+  door), walls as propane bombs or bulk explosive ammo.
 - **Explosive Optimizer** — enter the raw materials you have; a greedy damage-per-sulfur algorithm
   (see `lib/optimizer.ts`) returns the most raid damage you can craft, leftovers, and all-in
   alternatives per explosive.

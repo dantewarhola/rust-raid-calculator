@@ -34,6 +34,14 @@ export interface StructureDef {
   icon: string;
   /** Explosives required to destroy one unit (hard side). */
   toDestroy: QuantityTable;
+  /**
+   * Real per-hit damage where it differs from the linear hp/quantity
+   * estimate. Needed for the cheapest-mix solver: a rocket deals ~220
+   * to a sheet metal door (2 are needed only because 220 < 250), so
+   * the true remainder after one rocket is 30 HP — 8 explosive ammo —
+   * not the 125 HP the destroy count alone would suggest.
+   */
+  damage?: Partial<Record<ExplosiveId, number>>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -46,8 +54,6 @@ const WOOD_BLOCK: QuantityTable = {
   satchel: 3,
   beancan: 13,
   explosiveAmmo: 49,
-  hvRocket: 6,
-  incendiaryRocket: 2,
   propaneBomb: 2,
 };
 
@@ -57,8 +63,6 @@ const STONE_BLOCK: QuantityTable = {
   satchel: 10,
   beancan: 46,
   explosiveAmmo: 185,
-  hvRocket: null, // negligible damage — not a real option
-  incendiaryRocket: null,
   propaneBomb: 4,
 };
 
@@ -68,8 +72,6 @@ const SHEET_BLOCK: QuantityTable = {
   satchel: 23,
   beancan: 112,
   explosiveAmmo: 400,
-  hvRocket: null,
-  incendiaryRocket: null,
   propaneBomb: 8,
 };
 
@@ -79,8 +81,6 @@ const ARMORED_BLOCK: QuantityTable = {
   satchel: 46,
   beancan: 223,
   explosiveAmmo: 799,
-  hvRocket: null,
-  incendiaryRocket: null,
   propaneBomb: 15,
 };
 
@@ -94,8 +94,6 @@ const WOODEN_DOOR: QuantityTable = {
   satchel: 2,
   beancan: 6,
   explosiveAmmo: 16,
-  hvRocket: 9,
-  incendiaryRocket: 1,
   propaneBomb: 2,
 };
 
@@ -105,8 +103,6 @@ const SHEET_DOOR: QuantityTable = {
   satchel: 4,
   beancan: 18,
   explosiveAmmo: 63,
-  hvRocket: 11,
-  incendiaryRocket: null,
   propaneBomb: 2,
 };
 
@@ -116,8 +112,6 @@ const GARAGE_DOOR: QuantityTable = {
   satchel: 9,
   beancan: 42,
   explosiveAmmo: 150,
-  hvRocket: 25,
-  incendiaryRocket: null,
   propaneBomb: 5,
 };
 
@@ -127,10 +121,18 @@ const ARMORED_DOOR: QuantityTable = {
   satchel: 15,
   beancan: 69,
   explosiveAmmo: 250,
-  hvRocket: 42,
-  incendiaryRocket: null,
   propaneBomb: 8,
 };
+
+/**
+ * Real per-hit damage vs. doors (rustlabs attack tables). A rocket
+ * deals ~220 to any door and C4 ~334; explosive 5.56 deals 4 to metal
+ * doors and 12.5 to wooden ones. These drive the remainder math in the
+ * cheapest-mix solver — e.g. sheet metal door = 1 rocket (220) leaves
+ * 30 HP = 8 explosive ammo.
+ */
+const METAL_DOOR_DAMAGE = { rocket: 220, c4: 334, explosiveAmmo: 4 } as const;
+const WOODEN_DOOR_DAMAGE = { rocket: 220, c4: 334, explosiveAmmo: 12.5 } as const;
 
 /* ------------------------------------------------------------------ */
 /* Structure catalog                                                   */
@@ -173,6 +175,7 @@ const doors: StructureDef[] = [
     hp: 200,
     icon: "door-wood",
     toDestroy: WOODEN_DOOR,
+    damage: WOODEN_DOOR_DAMAGE,
   },
   {
     id: "door-metal",
@@ -183,6 +186,7 @@ const doors: StructureDef[] = [
     hp: 250,
     icon: "door-metal",
     toDestroy: SHEET_DOOR,
+    damage: METAL_DOOR_DAMAGE,
   },
   {
     id: "door-garage",
@@ -193,6 +197,7 @@ const doors: StructureDef[] = [
     hp: 600,
     icon: "door-garage",
     toDestroy: GARAGE_DOOR,
+    damage: METAL_DOOR_DAMAGE,
   },
   {
     id: "door-armored",
@@ -203,6 +208,7 @@ const doors: StructureDef[] = [
     hp: 1000,
     icon: "door-armored",
     toDestroy: ARMORED_DOOR,
+    damage: METAL_DOOR_DAMAGE,
   },
 ];
 

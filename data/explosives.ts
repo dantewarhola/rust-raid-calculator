@@ -21,9 +21,6 @@
  *                          → 480 sulfur, 720 charcoal, 80 frags, 10 cloth, 1 rope
  *   Explosive 5.56 x2    = 20 GP + 10 sulfur + 5 frags
  *                          → per round: 25 sulfur, 30 charcoal, 2.5 frags
- *   HV Rocket            = 1 pipe + 100 GP → 200 sulfur, 300 charcoal, 1 pipe
- *   Incendiary Rocket    = 2 pipes + 250 LGF + 100 GP
- *                          → 200 sulfur, 300 charcoal, 250 LGF, 2 pipes
  *   Propane Explosive    = 1 empty propane tank + 450 GP + 20 LGF
  *   Bomb                   → 900 sulfur, 1350 charcoal, 20 LGF, 1 tank
  *                          (Primitive update, Feb 2025; deployed by hand
@@ -38,8 +35,6 @@ export type ExplosiveId =
   | "satchel"
   | "beancan"
   | "explosiveAmmo"
-  | "hvRocket"
-  | "incendiaryRocket"
   | "propaneBomb";
 
 export interface ExplosiveDef {
@@ -120,17 +115,6 @@ export const EXPLOSIVES: readonly ExplosiveDef[] = [
     notes: "Top-tier sulfur efficiency vs. sheet metal doors. Wears gun barrels.",
   },
   {
-    id: "hvRocket",
-    name: "High Velocity Rocket",
-    shortName: "HV Rocket",
-    icon: "hv-rocket",
-    rawCost: { sulfur: 200, charcoal: 300, metalPipe: 1 },
-    structureDamage: 22,
-    sulfurCost: 200,
-    workbench: 2,
-    notes: "Cheap rocket; weak vs. hard-side structures. Decent vs. doors.",
-  },
-  {
     id: "propaneBomb",
     name: "Propane Explosive Bomb",
     shortName: "Propane",
@@ -140,17 +124,6 @@ export const EXPLOSIVES: readonly ExplosiveDef[] = [
     sulfurCost: 900,
     workbench: 2,
     notes: "Best damage per sulfur vs. walls. Deploy by hand or catapult; tanks are looted, not crafted.",
-  },
-  {
-    id: "incendiaryRocket",
-    name: "Incendiary Rocket",
-    shortName: "Fire Rocket",
-    icon: "incendiary-rocket",
-    rawCost: { sulfur: 200, charcoal: 300, lowGradeFuel: 250, metalPipe: 2 },
-    structureDamage: 15,
-    sulfurCost: 200,
-    workbench: 3,
-    notes: "Fire damage — only practical vs. wooden structures.",
   },
 ] as const;
 

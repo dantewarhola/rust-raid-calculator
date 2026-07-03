@@ -41,8 +41,6 @@ const ITEM_ICONS = {
   satchel: "explosive.satchel",
   beancan: "grenade.beancan",
   "explosive-ammo": "ammo.rifle.explosive",
-  "hv-rocket": "ammo.rocket.hv",
-  "incendiary-rocket": "ammo.rocket.fire",
   sulfur: "sulfur",
   charcoal: "charcoal",
   "metal-fragments": "metal.fragments",
