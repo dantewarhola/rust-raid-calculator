@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-pit text-bone font-body;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(206, 66, 43, 0.08), transparent),
+    linear-gradient(#0d0d0d, #0d0d0d);
+}
+
+/* Grunge/noise overlay — an SVG turbulence texture kept extremely subtle. */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Number inputs: kill the spinners, keep it industrial. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+@layer components {
+  .panel {
+    @apply bg-slab border border-seam rounded-sm shadow-panel;
+  }
+
+  .input-field {
+    @apply w-full bg-pit border border-seam rounded-sm px-2 py-1.5 text-right
+      font-display text-lg tracking-wide text-bone
+      focus:outline-none focus:border-rust focus:ring-1 focus:ring-rust/50
+      placeholder:text-ash/40;
+  }
+
+  .th-industrial {
+    @apply px-3 py-2 text-left font-display text-xs uppercase tracking-[0.2em] text-ash border-b-2 border-rust/60;
+  }
+
+  .td-industrial {
+    @apply px-3 py-2 border-b border-seam/60 text-sm;
+  }
+}
