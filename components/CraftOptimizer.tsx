@@ -25,6 +25,7 @@ export default function CraftOptimizer() {
     techTrash: 0,
     metalPipe: 0,
     rope: 0,
+    emptyPropaneTank: 0,
   });
   const [showAlternatives, setShowAlternatives] = useState(false);
 

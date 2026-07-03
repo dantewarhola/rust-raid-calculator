@@ -14,7 +14,8 @@ export type ResourceId =
   | "cloth"
   | "techTrash"
   | "metalPipe"
-  | "rope";
+  | "rope"
+  | "emptyPropaneTank";
 
 export interface ResourceDef {
   id: ResourceId;
@@ -34,6 +35,7 @@ export const RESOURCES: readonly ResourceDef[] = [
   { id: "techTrash", name: "Tech Trash", icon: "tech-trash", optimizerInput: true },
   { id: "metalPipe", name: "Metal Pipe", icon: "metal-pipe", optimizerInput: true },
   { id: "rope", name: "Rope", icon: "rope", optimizerInput: true },
+  { id: "emptyPropaneTank", name: "Empty Propane Tank", icon: "propane-tank", optimizerInput: true },
 ] as const;
 
 /** A bag of raw resources, e.g. a crafting cost or a player inventory. */
@@ -56,5 +58,6 @@ export function emptyBag(): Record<ResourceId, number> {
     techTrash: 0,
     metalPipe: 0,
     rope: 0,
+    emptyPropaneTank: 0,
   };
 }

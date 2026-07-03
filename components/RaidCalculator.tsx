@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { EXPLOSIVES, type ExplosiveId } from "@/data/explosives";
+import { EXPLOSIVES } from "@/data/explosives";
 import { STRUCTURES } from "@/data/structures";
-import { calculateRaid, type RaidSelection } from "@/lib/calc";
+import { calculateRaid, type RaidSelection, type RaidTool } from "@/lib/calc";
+import { cheapestMix } from "@/lib/optimalRaid";
 import ItemIcon from "./ItemIcon";
 import ResultTable, { type ResultRow } from "./ResultTable";
 import ResourceSummary from "./ResourceSummary";
@@ -12,13 +13,7 @@ const formatter = new Intl.NumberFormat("en-US");
 
 interface RowState {
   count: number;
-  tool: ExplosiveId;
-}
-
-/** Default tool per structure: cheapest sensible pick. */
-function defaultTool(structureId: string): ExplosiveId {
-  const s = STRUCTURES.find((x) => x.id === structureId)!;
-  return s.toDestroy.c4 !== null ? "c4" : "rocket";
+  tool: RaidTool;
 }
 
 /**
@@ -26,8 +21,10 @@ function defaultTool(structureId: string): ExplosiveId {
  * Live recalculation: state flows straight into calculateRaid via useMemo.
  */
 export default function RaidCalculator() {
+  // Default every structure to the cheapest-sulfur mix — raiding is
+  // won on sulfur economy, not convenience.
   const [rows, setRows] = useState<Record<string, RowState>>(() =>
-    Object.fromEntries(STRUCTURES.map((s) => [s.id, { count: 0, tool: defaultTool(s.id) }])),
+    Object.fromEntries(STRUCTURES.map((s) => [s.id, { count: 0, tool: "optimal" as const }])),
   );
 
   const selections: RaidSelection[] = useMemo(
@@ -53,8 +50,7 @@ export default function RaidCalculator() {
     id: `${line.structureId}-${line.tool}`,
     cells: {
       structure: { value: `${line.count}× ${line.structureName}`, icon: STRUCTURES.find((s) => s.id === line.structureId)?.icon },
-      tool: { value: line.toolName },
-      explosives: { value: formatter.format(line.explosivesNeeded) },
+      tool: { value: line.tool === "optimal" ? `${line.toolLabel} each` : line.toolLabel },
       sulfur: { value: formatter.format(line.sulfur), highlight: true },
     },
   }));
@@ -95,12 +91,13 @@ export default function RaidCalculator() {
                     <select
                       value={row.tool}
                       onChange={(e) =>
-                        setRows((prev) => ({ ...prev, [s.id]: { ...prev[s.id], tool: e.target.value as ExplosiveId } }))
+                        setRows((prev) => ({ ...prev, [s.id]: { ...prev[s.id], tool: e.target.value as RaidTool } }))
                       }
                       className="panel px-2 py-2 bg-slab font-display text-sm uppercase tracking-wide text-bone
-                        focus:outline-none focus:border-rust sm:w-44"
+                        focus:outline-none focus:border-rust sm:w-52"
                       aria-label={`Raid tool for ${s.name}`}
                     >
+                      <option value="optimal">★ Cheapest — {cheapestMix(s).label}</option>
                       {EXPLOSIVES.filter((e) => s.toDestroy[e.id] !== null).map((e) => (
                         <option key={e.id} value={e.id}>
                           {e.shortName} × {s.toDestroy[e.id]}
@@ -147,8 +144,7 @@ export default function RaidCalculator() {
           <ResultTable
             columns={[
               { key: "structure", header: "Target" },
-              { key: "tool", header: "Tool" },
-              { key: "explosives", header: "Qty", align: "right" },
+              { key: "tool", header: "Method" },
               { key: "sulfur", header: "Sulfur", align: "right" },
             ]}
             rows={breakdownRows}

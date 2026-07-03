@@ -2,10 +2,12 @@
  * Structure definitions: HP and "quantity of explosive X required to
  * destroy" for every raidable target the calculator supports.
  *
- * DATA SOURCE: rustlabs.com raiding tables (mirrored at
- * wiki.rustclash.com/group=building-blocks). Transcribed 2026-07-03.
- * Beancan counts are rustlabs averages (beancans have a random fuse and
- * can dud, so real-world counts vary). A `null` quantity means the tool
+ * DATA SOURCE: rusthelp.com destroy tables (cross-checked against the
+ * rustlabs.com tables mirrored at wiki.rustclash.com). Verified
+ * 2026-07-03 — including Propane Explosive Bomb (deployed) counts and
+ * the current Armored Door stats (1000 HP / 3 C4 / 5 rockets).
+ * Beancan counts are averages (beancans have a random fuse and can
+ * dud, so real-world counts vary). A `null` quantity means the tool
  * is impractical or deals no meaningful damage to that target and the UI
  * renders it as "—".
  *
@@ -44,8 +46,9 @@ const WOOD_BLOCK: QuantityTable = {
   satchel: 3,
   beancan: 13,
   explosiveAmmo: 49,
-  hvRocket: 5,
+  hvRocket: 6,
   incendiaryRocket: 2,
+  propaneBomb: 2,
 };
 
 const STONE_BLOCK: QuantityTable = {
@@ -54,28 +57,31 @@ const STONE_BLOCK: QuantityTable = {
   satchel: 10,
   beancan: 46,
   explosiveAmmo: 185,
-  hvRocket: null, // ~0.5 dmg per hit — not a real option
+  hvRocket: null, // negligible damage — not a real option
   incendiaryRocket: null,
+  propaneBomb: 4,
 };
 
 const SHEET_BLOCK: QuantityTable = {
   c4: 4,
   rocket: 8,
   satchel: 23,
-  beancan: 92,
+  beancan: 112,
   explosiveAmmo: 400,
   hvRocket: null,
   incendiaryRocket: null,
+  propaneBomb: 8,
 };
 
 const ARMORED_BLOCK: QuantityTable = {
   c4: 8,
   rocket: 15,
   satchel: 46,
-  beancan: 184,
+  beancan: 223,
   explosiveAmmo: 799,
   hvRocket: null,
   incendiaryRocket: null,
+  propaneBomb: 15,
 };
 
 /* ------------------------------------------------------------------ */
@@ -87,9 +93,10 @@ const WOODEN_DOOR: QuantityTable = {
   rocket: 1,
   satchel: 2,
   beancan: 6,
-  explosiveAmmo: 18,
-  hvRocket: 3,
+  explosiveAmmo: 16,
+  hvRocket: 9,
   incendiaryRocket: 1,
+  propaneBomb: 2,
 };
 
 const SHEET_DOOR: QuantityTable = {
@@ -98,8 +105,9 @@ const SHEET_DOOR: QuantityTable = {
   satchel: 4,
   beancan: 18,
   explosiveAmmo: 63,
-  hvRocket: 4,
+  hvRocket: 11,
   incendiaryRocket: null,
+  propaneBomb: 2,
 };
 
 const GARAGE_DOOR: QuantityTable = {
@@ -108,18 +116,20 @@ const GARAGE_DOOR: QuantityTable = {
   satchel: 9,
   beancan: 42,
   explosiveAmmo: 150,
-  hvRocket: 9,
+  hvRocket: 25,
   incendiaryRocket: null,
+  propaneBomb: 5,
 };
 
 const ARMORED_DOOR: QuantityTable = {
-  c4: 2,
-  rocket: 4,
-  satchel: 12,
-  beancan: 56,
-  explosiveAmmo: 200,
-  hvRocket: 12,
+  c4: 3,
+  rocket: 5,
+  satchel: 15,
+  beancan: 69,
+  explosiveAmmo: 250,
+  hvRocket: 42,
   incendiaryRocket: null,
+  propaneBomb: 8,
 };
 
 /* ------------------------------------------------------------------ */
@@ -190,7 +200,7 @@ const doors: StructureDef[] = [
     tier: "Armored",
     kind: "Door",
     category: "door",
-    hp: 800,
+    hp: 1000,
     icon: "door-armored",
     toDestroy: ARMORED_DOOR,
   },

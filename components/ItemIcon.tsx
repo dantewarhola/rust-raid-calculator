@@ -12,11 +12,12 @@ interface ItemIconProps {
 }
 
 /**
- * Building-block icons are always generated SVGs (walls, doorways, floors,
- * window frames are not inventory items — no official sprite exists), so
- * skip the PNG attempt for them and avoid pointless 404s.
+ * Building-block renders (walls, doorways, floors, window frames) are
+ * downloaded as WEBP from the rusthelp CDN — they are not inventory items
+ * and have no PNG shortname sprite. Try .webp for them, .png for items,
+ * with generated .svg placeholders as the shared fallback.
  */
-const SVG_ONLY_PREFIXES = ["wall-", "doorway-", "floor-", "window-"];
+const WEBP_PREFIXES = ["wall-", "doorway-", "floor-", "window-"];
 
 /**
  * Renders an item sprite from /public/icons.
@@ -27,8 +28,8 @@ const SVG_ONLY_PREFIXES = ["wall-", "doorway-", "floor-", "window-"];
  * first and fall back to .svg on error.
  */
 export default function ItemIcon({ icon, alt, size = 32, className }: ItemIconProps) {
-  const [ext, setExt] = useState<"png" | "svg">(() =>
-    SVG_ONLY_PREFIXES.some((p) => icon.startsWith(p)) ? "svg" : "png",
+  const [ext, setExt] = useState<"png" | "webp" | "svg">(() =>
+    WEBP_PREFIXES.some((p) => icon.startsWith(p)) ? "webp" : "png",
   );
 
   return (
@@ -40,7 +41,7 @@ export default function ItemIcon({ icon, alt, size = 32, className }: ItemIconPr
       unoptimized
       className={className}
       onError={() => {
-        if (ext === "png") setExt("svg");
+        if (ext !== "svg") setExt("svg");
       }}
     />
   );

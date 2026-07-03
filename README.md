@@ -10,7 +10,10 @@ client-side — no backend, no database. Deployable to Vercel with zero configur
 
 - **Raid Calculator** — enter how many walls, floors, doorways, windows, and doors (per tier) you
   need to destroy, pick a raid tool per structure, and get the explosive counts plus a raw-material
-  shopping list (sulfur, charcoal, metal fragments, low grade fuel, cloth, tech trash, pipes, rope).
+  shopping list (sulfur, charcoal, metal fragments, low grade fuel, cloth, tech trash, pipes, rope,
+  propane tanks). Every structure defaults to the **cheapest-sulfur mix** of explosives, computed by
+  a small dynamic program in `lib/optimalRaid.ts` — e.g. a garage door is cheaper via explosive ammo
+  than via 2 C4, and walls are cheapest via Propane Explosive Bombs.
 - **Explosive Optimizer** — enter the raw materials you have; a greedy damage-per-sulfur algorithm
   (see `lib/optimizer.ts`) returns the most raid damage you can craft, leftovers, and all-in
   alternatives per explosive.
@@ -48,10 +51,12 @@ by `scripts/download-icons.mjs` (`npm run icons`), which:
 
 1. Downloads each item sprite by its Rust item shortname from community CDN mirrors
    (rustlabs / rustclash item-icon set, rusthelp icon set), trying each mirror in order.
-2. Generates themed SVG placeholders for building blocks (walls, doorways, floors, window frames),
-   which are not inventory items and have no official sprite.
-3. Generates an SVG placeholder for any item whose download fails, so the UI never shows a broken
-   image. The `<ItemIcon>` component tries `{name}.png` first and falls back to `{name}.svg`.
+2. Downloads building-block renders (walls, floors, doorways, window frames — every tier) as WEBP
+   from the rusthelp.com CDN by building slug; these are not inventory items and have no
+   shortname sprite.
+3. Generates a themed SVG placeholder for anything whose download fails, so the UI never shows a
+   broken image. The `<ItemIcon>` component tries the real extension first (`.png` for items,
+   `.webp` for blocks) and falls back to `{name}.svg`.
 
 The downloaded icons in `public/icons/` are committed so Vercel deploys don't depend on the mirrors.
 Re-run `npm run icons` after adding new items to `data/`.
@@ -68,8 +73,9 @@ Every game number lives in typed constants under [`data/`](data/):
 | `data/turrets.ts` | Auto Turret destruction methods |
 | `data/resources.ts` | Raw resource definitions |
 
-**Data source:** rustlabs.com raiding/crafting tables (mirrored at wiki.rustclash.com), transcribed
-2026-07-03. Rust is patched monthly — when Facepunch rebalances, update the constants in `data/`
+**Data source:** rusthelp.com destroy tables, cross-checked against the rustlabs.com raiding tables
+(mirrored at wiki.rustclash.com), verified 2026-07-03. Includes the Propane Explosive Bomb
+(Primitive update) and current Armored Door stats. Rust is patched monthly — when Facepunch rebalances, update the constants in `data/`
 and everything else (calculators, optimizer, reference chart) recomputes automatically. Beancan
 counts are averages (random fuses), and melee tool counts are planning estimates.
 

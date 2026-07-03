@@ -6,12 +6,13 @@
  * (rustlabs / rustclash item-icon set, rusthelp icon set).
  *
  * Building blocks (walls, doorways, floors, window frames) are not
- * inventory items and have no shortname sprites, so themed SVG
- * placeholders are generated for them — and for any item whose
- * download fails, ensuring the app never shows a broken image.
+ * inventory items and have no shortname sprites; their renders are
+ * fetched as WEBP from the rusthelp.com CDN by building slug. Themed
+ * SVG placeholders are still generated as a fallback for any icon
+ * whose download fails, ensuring the app never shows a broken image.
  *
- * The <ItemIcon> component tries `{name}.png` first and falls back to
- * `{name}.svg`, so downloaded sprites always win over placeholders.
+ * The <ItemIcon> component tries the real sprite extension first
+ * (.png for items, .webp for blocks) and falls back to `{name}.svg`.
  */
 
 import { mkdir, writeFile, access } from "node:fs/promises";
@@ -25,6 +26,13 @@ const CDN_BASES = [
   (s) => `https://rustlabs.com/img/items180/${s}.png`,
   (s) => `https://cdn.rusthelp.com/images/public/128/${s}.png`,
 ];
+
+/** Some CDNs reject requests without browser-like headers. */
+const FETCH_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+  Referer: "https://rusthelp.com/",
+};
 
 /** icon file name (matches data/*.ts `icon` fields) → Rust item shortname */
 const ITEM_ICONS = {
@@ -54,6 +62,33 @@ const ITEM_ICONS = {
   "compound-bow": "bow.compound",
   "hv-arrow": "arrow.hv",
   autoturret: "autoturret",
+  "propane-bomb": "catapult.ammo.explosive",
+  "propane-tank": "propanetank",
+};
+
+/**
+ * Building-block renders hosted on the rusthelp.com CDN, keyed by our
+ * icon file name → rusthelp building slug. Served as WEBP.
+ */
+const BLOCK_ICON_BASE = (slug) => `https://cdn.rusthelp.com/images/256/${slug}.webp`;
+
+const BLOCK_ICONS = {
+  "wall-wood": "wood-wall",
+  "wall-stone": "stone-wall",
+  "wall-metal": "metal-wall",
+  "wall-armored": "armored-wall",
+  "floor-wood": "wood-floor",
+  "floor-stone": "stone-floor",
+  "floor-metal": "metal-floor",
+  "floor-armored": "armored-floor",
+  "doorway-wood": "wood-wall-doorway",
+  "doorway-stone": "stone-wall-doorway",
+  "doorway-metal": "metal-wall-doorway",
+  "doorway-armored": "armored-wall-doorway",
+  "window-wood": "wood-wall-window",
+  "window-stone": "stone-wall-window",
+  "window-metal": "metal-wall-window",
+  "window-armored": "armored-wall-window",
 };
 
 /** Building-block placeholder definitions: tier color + kind glyph. */
@@ -98,17 +133,30 @@ async function exists(file) {
   }
 }
 
+/** PNG magic, or RIFF....WEBP container. Some CDNs serve octet-stream. */
+function looksLikeImage(buffer) {
+  if (buffer.length < 16) return false;
+  if (buffer.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47]))) return true;
+  return buffer.subarray(0, 4).toString("ascii") === "RIFF" && buffer.subarray(8, 12).toString("ascii") === "WEBP";
+}
+
+async function fetchImage(url) {
+  try {
+    const res = await fetch(url, { headers: FETCH_HEADERS, signal: AbortSignal.timeout(15000) });
+    if (res.ok) {
+      const buffer = Buffer.from(await res.arrayBuffer());
+      if (looksLikeImage(buffer)) return buffer;
+    }
+  } catch {
+    // caller decides fallback
+  }
+  return null;
+}
+
 async function download(shortname) {
   for (const base of CDN_BASES) {
-    const url = base(shortname);
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
-      if (res.ok && (res.headers.get("content-type") ?? "").includes("image")) {
-        return Buffer.from(await res.arrayBuffer());
-      }
-    } catch {
-      // try next mirror
-    }
+    const buffer = await fetchImage(base(shortname));
+    if (buffer) return buffer;
   }
   return null;
 }
@@ -138,7 +186,24 @@ async function main() {
     }
   }
 
-  // 2. Building-block placeholders (no official sprite exists for these).
+  // 2. Building-block renders from the rusthelp CDN (WEBP).
+  for (const [name, slug] of Object.entries(BLOCK_ICONS)) {
+    const webpPath = path.join(OUT_DIR, `${name}.webp`);
+    if (await exists(webpPath)) {
+      skipped++;
+      continue;
+    }
+    const buffer = await fetchImage(BLOCK_ICON_BASE(slug));
+    if (buffer) {
+      await writeFile(webpPath, buffer);
+      console.log(`✓ ${name}.webp  (${slug})`);
+      downloaded++;
+    } else {
+      console.warn(`! ${name}: CDN failed — SVG placeholder will be used`);
+    }
+  }
+
+  // 3. Themed SVG placeholders as a safety net for every block icon.
   for (const kind of Object.keys(KIND_GLYPHS)) {
     for (const tier of Object.keys(TIER_COLORS)) {
       const file = path.join(OUT_DIR, `${kind}-${tier}.svg`);
